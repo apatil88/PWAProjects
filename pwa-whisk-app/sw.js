@@ -11,6 +11,7 @@ const assets = [
   "/css/materialize.min.css",
   "/img/dish.png",
   "https://fonts.googleapis.com/icon?family=Material+Icons",
+  "https://fonts.gstatic.com/s/materialicons/v50/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
 ];
 
 // listen for 'install' event
@@ -33,4 +34,10 @@ self.addEventListener("activate", () => {
 // listen for 'fetch' event
 self.addEventListener("fetch", (event) => {
   //console.log("fetch event", event);
+  //Intercept request and fetch assets from cache
+  event.respondWith(
+    caches.match(event.request).then((cacheRes) => {
+      return cacheRes || fetch(event.request); //If asset is not present in cache, allow browser to continue fetching
+    })
+  );
 });

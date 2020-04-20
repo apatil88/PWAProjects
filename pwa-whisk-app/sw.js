@@ -65,7 +65,10 @@ self.addEventListener("fetch", (event) => {
         );
       })
       .catch(() => {
-        caches.match("/pages/fallback.html");
+        //Return fallback page only for assets requested with .html
+        if (event.request.url.indexOf(".html") > -1) {
+          return caches.match("/pages/fallback.html");
+        }
       })
   );
 });

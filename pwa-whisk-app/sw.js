@@ -1,4 +1,5 @@
 const staticCacheName = "site-static-v2";
+const dynamicCacheName = "site-dynamic-v1";
 
 // assets to cache
 const assets = [
@@ -12,6 +13,7 @@ const assets = [
   "/img/dish.png",
   "https://fonts.googleapis.com/icon?family=Material+Icons",
   "https://fonts.gstatic.com/s/materialicons/v50/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
+  "/pages/fallback.html",
 ];
 
 // listen for 'install' event
@@ -35,7 +37,7 @@ self.addEventListener("activate", (event) => {
       //console.log(keys);
       return Promise.all(
         keys
-          .filter((key) => key !== staticCacheName)
+          .filter((key) => key !== staticCacheName && key !== dynamicCacheName)
           .map((key) => caches.delete(key))
       );
     })
@@ -47,8 +49,23 @@ self.addEventListener("fetch", (event) => {
   //console.log("fetch event", event);
   //Intercept request and fetch assets from cache
   event.respondWith(
-    caches.match(event.request).then((cacheRes) => {
-      return cacheRes || fetch(event.request); //If asset is not present in cache, allow browser to continue fetching
-    })
+    //Attempt to fetch resource from cache
+    caches
+      .match(event.request)
+      .then((cacheRes) => {
+        return (
+          cacheRes ||
+          fetch(event.request).then((fetchResponse) => {
+            //If asset is not present in cache, allow browser to continue fetching
+            return caches.open(dynamicCacheName).then((cache) => {
+              cache.put(event.request.url, fetchResponse.clone());
+              return fetchResponse;
+            });
+          })
+        );
+      })
+      .catch(() => {
+        caches.match("/pages/fallback.html");
+      })
   );
 });

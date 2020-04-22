@@ -20,6 +20,38 @@ db.collection("recipes").onSnapshot((snapshot) => {
     }
     if (change.type === "removed") {
       //remove the document data from the webpage
+      removeRecipe(change.doc.id);
     }
   });
+});
+
+// add new recipe
+const form = document.querySelector("form");
+form.addEventListener("submit", (event) => {
+  event.preventDefault();
+
+  const recipe = {
+    title: form.title.value,
+    ingredients: form.ingredients.value,
+  };
+
+  // Add to Firestore db
+  db.collection("recipes")
+    .add(recipe)
+    .catch((error) => {
+      console.log(error);
+    });
+
+  form.title.value = "";
+  form.ingredients.value = "";
+});
+
+// delete a recipe
+const recipeContainer = document.querySelector(".recipes");
+recipeContainer.addEventListener("click", (event) => {
+  if (event.target.tagName === "I") {
+    const id = event.target.getAttribute("data-id");
+    // delete document from Firebase db
+    db.collection("recipes").doc(id).delete();
+  }
 });
